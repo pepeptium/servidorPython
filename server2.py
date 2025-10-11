@@ -3,6 +3,30 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import pandas as pd
 from io import BytesIO
+def convertir_valor(valor):
+    if pd.isna(valor):
+        return ""
+    if isinstance(valor, bool):
+        return valor
+    if isinstance(valor, (int, float)):
+        return int(valor) if valor == int(valor) else float(valor)
+    if isinstance(valor, (datetime.datetime, datetime.date)):
+        return valor.isoformat()
+    return str(valor)
+
+def analizar_excel_tipado(path_excel, sheet_name=0):
+    df = pd.read_excel(path_excel, sheet_name=sheet_name, header=None)
+    resultado = {}
+
+    for col in df.columns:
+        nombre = str(df.iloc[0, col])
+        datos = [convertir_valor(df.iloc[row, col]) for row in range(1, len(df))]
+        resultado[f"columna_{col}"] = {
+            "nombre": nombre,
+            "datos": datos
+        }
+
+    return resultado
 
 app = FastAPI()
 app.add_middleware(
