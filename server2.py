@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import pandas as pd
 from io import BytesIO
-
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -12,6 +11,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 def convertir_valor(valor):
     if pd.isna(valor):
         return ""
@@ -57,3 +57,9 @@ async def analizar_excel(file: UploadFile = File(...)):
     except Exception as e:
         return {"estado": "error", "detalle": str(e)}
 
+@app.post("/analizar_excel_tipado/")
+async def endpoint_analizar_excel(file: UploadFile = File(...)):
+    contents = await file.read()
+    excel_io = io.BytesIO(contents)
+    resultado = analizar_excel_tipado(excel_io)
+    return resultado
