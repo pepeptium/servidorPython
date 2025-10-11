@@ -59,7 +59,10 @@ async def analizar_excel(file: UploadFile = File(...)):
 
 @app.post("/analizar_excel_tipado/")
 async def endpoint_analizar_excel(file: UploadFile = File(...)):
-    contents = await file.read()
-    excel_io = io.BytesIO(contents)
-    resultado = analizar_excel_tipado(excel_io)
-    return resultado
+    try:
+        contents = await file.read()
+        excel_io = BytesIO(contents)
+        resultado = analizar_excel_tipado(excel_io)
+        return resultado
+    except Exception as e:
+        return {"estado": "error", "detalle": str(e)}
