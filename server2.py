@@ -6,7 +6,7 @@ from io import BytesIO
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # O usa ["http://localhost:63946"] para más seguridad
+    allow_origins= ["http://localhost:63266"],  # O usa ["http://localhost:63946"] para más seguridad
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,15 +25,15 @@ def convertir_valor(valor):
 
 def analizar_excel_tipado(path_excel, sheet_name=0):
     df = pd.read_excel(path_excel, sheet_name=sheet_name, header=None)
-    resultado = {}
+    resultado = {"prueba":"pepito de los palotes"}
 
-    for col in df.columns:
-        nombre = str(df.iloc[0, col])
-        datos = [convertir_valor(df.iloc[row, col]) for row in range(1, len(df))]
-        resultado[f"columna_{col}"] = {
-            "nombre": nombre,
-            "datos": datos
-        }
+   # for col in df.columns:
+   #     nombre = str(df.iloc[0, col])
+    #    datos = [convertir_valor(df.iloc[row, col]) for row in range(1, len(df))]
+     #   resultado[f"columna_{col}"] = {
+      #      "nombre": nombre,
+      #      "datos": datos
+      #  }
 
     return resultado
 
