@@ -25,21 +25,6 @@ def convertir_valor(valor):
         return valor.isoformat()
     return str(valor)
 
-def analizar_excel_tipado(path_excel, sheet_name=0):
-    df = pd.read_excel(path_excel, sheet_name=sheet_name, header=None)
-    resultado = {"prueba":"pepito de los palotes"}
-
-   # for col in df.columns:
-   #     nombre = str(df.iloc[0, col])
-    #    datos = [convertir_valor(df.iloc[row, col]) for row in range(1, len(df))]
-     #   resultado[f"columna_{col}"] = {
-      #      "nombre": nombre,
-      #      "datos": datos
-      #  }
-
-    return resultado
-
-
 
 @app.post("/analizar_excel/")
 async def analizar_excel(file: UploadFile = File(...)):
@@ -60,11 +45,31 @@ async def analizar_excel(file: UploadFile = File(...)):
         return {"estado": "error", "detalle": str(e)}
 
 @app.post("/analizar_excel_tipado/")
-async def endpoint_analizar_excel(file: UploadFile = File(...)):
+async def analizar_excel_tipado(file: UploadFile = File(...)):
+    if df.empty:
+     return {"estado": "error", "detalle": "El archivo está vacío"}
     try:
         contents = await file.read()
-        excel_io = BytesIO(contents)
-        resultado = analizar_excel_tipado(excel_io)
-        return resultado
+        df = pd.read_excel(BytesIO(contents), engine="openpyxl")
+        resultado = {"prueba":"pepito de los palotes"}
     except Exception as e:
         return {"estado": "error", "detalle": str(e)}
+
+
+
+   
+
+
+
+    
+  
+    
+
+   # for col in df.columns:
+   #     nombre = str(df.iloc[0, col])
+    #    datos = [convertir_valor(df.iloc[row, col]) for row in range(1, len(df))]
+     #   resultado[f"columna_{col}"] = {
+      #      "nombre": nombre,
+      #      "datos": datos
+      #  }
+
