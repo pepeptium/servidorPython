@@ -46,14 +46,19 @@ async def analizar_excel(file: UploadFile = File(...)):
 
 @app.post("/analizar_excel_tipado/")
 async def analizar_excel_tipado(file: UploadFile = File(...)):
-    if df.empty:
-     return {"estado": "error", "detalle": "El archivo está vacío"}
+   
     try:
         contents = await file.read()
         df = pd.read_excel(BytesIO(contents), engine="openpyxl")
+        if df.empty:
+          return {"estado": "error", "detalle": "El archivo está vacío"}
         resultado = {"prueba":"pepito de los palotes"}
     except Exception as e:
         return {"estado": "error", "detalle": str(e)}
+@app.get("/saludo/")
+def saludar():
+    return {"mensaje": "Hola mundo"}
+
 
 
 
