@@ -8,7 +8,7 @@ from io import BytesIO
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins= ["https://servidorpython.onrender.com","http://localhost:56951"],  # O usa ["http://localhost:63946"] para más seguridad
+    allow_origins= ["https://servidorpython.onrender.com","http://localhost:56951" ,"http://localhost:60160"], # O usa ["http://localhost:63946"] para más seguridad
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
