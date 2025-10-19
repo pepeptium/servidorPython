@@ -1,0 +1,3 @@
+//debo instalar python
+//instalar fastapi y uvicorn desde python
+//instalar android studio
