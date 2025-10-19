@@ -1,8 +1,11 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import io
 import pandas as pd
 import datetime
+import numpy as np
+
 
 from io import BytesIO
 app = FastAPI()
@@ -51,30 +54,18 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
         contents = await file.read()
         df = pd.read_excel(BytesIO(contents), engine="openpyxl")
         if df.empty:
-          return {"estado": "error", "detalle": "El archivo está vacío"}
-        resultado = {"prueba":"pepito de los palotes"}
+          return JSONResponse(content={"estado": "error", "detalle": "El archivo está vacío"})
+        
+        df_convertido = df.applymap(convertir_valor)
+        datos_dict = df_convertido.to_dict(orient="list")
+        return JSONResponse(content={"estado": "ok", "datos": datos_dict})
+
     except Exception as e:
-        return {"estado": "error", "detalle": str(e)}
+        JSONResponse(content={"estado": "error", "detalle": str(e)})
+
+    
+
+
 @app.get("/saludo/")
 def saludar():
     return {"mensaje": "Hola mundo"}
-
-
-
-
-   
-
-
-
-    
-  
-    
-
-   # for col in df.columns:
-   #     nombre = str(df.iloc[0, col])
-    #    datos = [convertir_valor(df.iloc[row, col]) for row in range(1, len(df))]
-     #   resultado[f"columna_{col}"] = {
-      #      "nombre": nombre,
-      #      "datos": datos
-      #  }
-
