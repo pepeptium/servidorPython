@@ -55,6 +55,7 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
         extension = file.filename.split(".")[-1].lower()
 
         if extension not in ["xls", "xlsx", "csv"]:
+            print("el fichero no excel ni csv")
             return JSONResponse(content={"estado": "error", "detalle": "Formato no soportado"})
         if extension == "csv":
          df = pd.read_csv(BytesIO(contents))
