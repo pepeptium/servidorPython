@@ -27,11 +27,24 @@ def convertir_valor(valor):
     if isinstance(valor, (datetime.datetime, datetime.date)):
         return valor.isoformat()
     if isinstance(valor, str):
+        # Limpieza básica: quitar espacios y caracteres invisibles
+        valor_limpio = valor.strip()
+
+        # Detectar si parece una fecha (evita strings como "123/456/7890")
+        if re.match(r"^\d{1,2}[-/\.]\d{1,2}[-/\.]\d{2,4}$", valor_limpio):
+            try:
+                fecha = parser.parse(valor_limpio, dayfirst=True)
+                return fecha.isoformat()
+            except (ValueError, OverflowError):
+                pass  # No era una fecha válida
+
+        # También puedes intentar parsear fechas con palabras (como "11 Sep 2024")
         try:
-            fecha = parser.parse(valor, dayfirst=True)
+            fecha = parser.parse(valor_limpio, dayfirst=True, fuzzy=True)
             return fecha.isoformat()
         except (ValueError, OverflowError):
-            pass  # No es una fecha válida
+            pass
+
 
     return str(valor)
 
