@@ -52,16 +52,35 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
    
     try:
         contents = await file.read()
-        df = pd.read_excel(BytesIO(contents), engine="openpyxl")
-        if df.empty:
-          return JSONResponse(content={"estado": "error", "detalle": "El archivo está vacío"})
+        extension = file.filename.split(".")[-1].lower()
+
+        if extension not in ["xls", "xlsx"]:
+            return JSONResponse(content={"estado": "error", "detalle": "Formato no soportado"})
         
-        df_convertido = df.applymap(convertir_valor)
-        datos_dict = df_convertido.to_dict(orient="list")
+        engine = "xlrd" if extension == "xls" else "openpyxl"
+        hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
+
+        datos_dict = {
+            nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
+            for nombre_hoja, df in hojas.items()
+        }
+
         return JSONResponse(content={"estado": "ok", "datos": datos_dict})
 
     except Exception as e:
-        JSONResponse(content={"estado": "error", "detalle": str(e)})
+        return JSONResponse(content={"estado": "error", "detalle": str(e)})
+
+  #      df = pd.read_excel(BytesIO(contents), engine="openpyxl")
+   #     if df.empty:
+   #       return JSONResponse(content={"estado": "error", "detalle": "El archivo está vacío"})
+          
+    #    df_convertido = df.applymap(convertir_valor)
+   #     datos_dict = df_convertido.to_dict(orient="list")
+   #     return JSONResponse(content={"estado": "ok", "datos": datos_dict})
+
+ #   except Exception as e:
+   #     JSONResponse(content={"estado": "error", "detalle": str(e)})
+
 
     
 
