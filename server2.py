@@ -26,6 +26,13 @@ def convertir_valor(valor):
         return int(valor) if valor == int(valor) else float(valor)
     if isinstance(valor, (datetime.datetime, datetime.date)):
         return valor.isoformat()
+    if isinstance(valor, str):
+        try:
+            fecha = parser.parse(valor, dayfirst=True)
+            return fecha.isoformat()
+        except (ValueError, OverflowError):
+            pass  # No es una fecha válida
+
     return str(valor)
 
 
