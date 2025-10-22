@@ -1,3 +1,5 @@
 //debo instalar python
-//instalar fastapi y uvicorn desde python
+//instalar pip  pacman -S mingw-w64-x86_64-python-pip
+//instalar fastapi y uvicorn desde python  python -m pip install "uvicorn[standard]"
+
 //instalar android studio

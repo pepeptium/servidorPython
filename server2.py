@@ -83,14 +83,14 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
             return JSONResponse(content={"estado": "error", "detalle": "Formato no soportado"})
         if extension == "csv":
          df = pd.read_csv(BytesIO(contents))
-         datos_dict = {"csv": df.applymap(convertir_valor).to_dict(orient="list")}
+         datos_dict = {"csv": df.to_dict(orient="list")}
         else:
 
             engine = "xlrd" if extension == "xls" else "openpyxl"
             hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
 
             datos_dict = {
-                nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
+                nombre_hoja: df.to_dict(orient="list")
                 for nombre_hoja, df in hojas.items()
         }
 
