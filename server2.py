@@ -7,6 +7,8 @@ import datetime
 import numpy as np
 import re
 from dateutil import parser
+import json
+
 
 
 
@@ -84,17 +86,20 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
         if extension == "csv":
          print("la extension esss csv")
          df = pd.read_csv(BytesIO(contents))
+         df = df.applymap(convertir_valor)
+
          datos_dict = {"csv": df.to_dict(orient="list")}
         else:
             print("la extension essss xlrd o xlsx")
             engine = "xlrd" if extension == "xls" else "openpyxl"
             hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
-
             datos_dict = {
-                nombre_hoja: df.to_dict(orient="list")
-                for nombre_hoja, df in hojas.items()
-        }
+             nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
+             for nombre_hoja, df in hojas.items()
+            }
 
+           
+            
         return JSONResponse(content={"estado": "ok", "datos": datos_dict})
 
     except Exception as e:
