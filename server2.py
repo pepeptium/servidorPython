@@ -73,7 +73,7 @@ async def analizar_excel(file: UploadFile = File(...)):
 
 @app.post("/analizar_excel_tipado/")
 async def analizar_excel_tipado(file: UploadFile = File(...)):
-   
+    print("estamos en el servidorrr")
     try:
         contents = await file.read()
         extension = file.filename.split(".")[-1].lower()
@@ -82,10 +82,11 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
             print("el fichero no excel ni csv")
             return JSONResponse(content={"estado": "error", "detalle": "Formato no soportado"})
         if extension == "csv":
+         print("la extension esss csv")
          df = pd.read_csv(BytesIO(contents))
          datos_dict = {"csv": df.to_dict(orient="list")}
         else:
-
+            print("la extension essss xlrd o xlsx")
             engine = "xlrd" if extension == "xls" else "openpyxl"
             hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
 
@@ -97,6 +98,7 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
         return JSONResponse(content={"estado": "ok", "datos": datos_dict})
 
     except Exception as e:
+        print("detallerrr error "+str(e))
         return JSONResponse(content={"estado": "error", "detalle": str(e)})
 
   #      df = pd.read_excel(BytesIO(contents), engine="openpyxl")
