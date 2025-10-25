@@ -45,11 +45,14 @@ def convertir_valor(valor):
                 pass  # No era una fecha válida
 
         # También puedes intentar parsear fechas con palabras (como "11 Sep 2024")
-        try:
-            fecha = parser.parse(valor_limpio, dayfirst=True, fuzzy=True)
-            return fecha.isoformat()
-        except (ValueError, OverflowError):
-            pass
+        # Detectar si contiene palabras clave de fecha (como "Sep", "Ene", "2025", etc.)
+        if re.search(r"\b(?:ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic|\d{4})\b", valor_limpio, re.IGNORECASE):
+            try:
+                fecha = parser.parse(valor_limpio, dayfirst=True, fuzzy=True)
+                return fecha.isoformat()
+            except (ValueError, OverflowError):
+                pass
+
 
 
     return str(valor)
