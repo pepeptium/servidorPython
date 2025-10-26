@@ -51,12 +51,13 @@ def convertir_valor(valor):
             if esp in valor_limpio.lower():
                 valor_limpio = re.sub(esp, eng, valor_limpio, flags=re.IGNORECASE)
                 break
-
-        try:
-            fecha = parser.parse(valor_limpio, dayfirst=True, fuzzy=True)
-            return fecha.isoformat()
-        except (ValueError, OverflowError):
-            pass
+        if re.search(r"\d{1,2}[-/\.]\d{1,2}[-/\.]\d{2,4}", valor_limpio) or re.search(r"\b(?:ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic|\d{4})\b", valor_limpio, re.IGNORECASE):
+    
+            try:
+                fecha = parser.parse(valor_limpio, dayfirst=True, fuzzy=False)
+                return fecha.isoformat()
+            except (ValueError, OverflowError):
+             pass
 
     return valor  
 
