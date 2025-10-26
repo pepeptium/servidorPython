@@ -94,10 +94,11 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
             }
         analisis = analizar_datos_dict(datos_dict)
         content={"estado": "ok", "datos": datos_dict}
+        return JSONResponse(content)
         content["&&estadistica&&"]=analisis
         print("analisisss" + analisis.toString())
             
-        return JSONResponse(content)
+      
 
     except Exception as e:
         print("detallerrr error "+str(e))
