@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from io import BytesIO
 import pandas as pd
-import datetime
 import re
 from dateutil import parser
 from typing import Dict, List, Any, Type
@@ -34,8 +33,9 @@ def convertir_valor(valor):
         return valor
     if isinstance(valor, (int, float)):
         return int(valor) if valor == int(valor) else float(valor)
-    if isinstance(valor, (datetime.datetime, datetime.date)):
+    if isinstance(valor, (datetime, date)):
         return valor.isoformat()
+
     if isinstance(valor, str):
         # Limpieza básica: quitar espacios y caracteres invisibles
         valor_limpio = valor.strip()
