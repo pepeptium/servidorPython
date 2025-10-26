@@ -10,6 +10,8 @@ from collections import Counter
 import math
 from datetime import datetime, date
 from dateutil import parser
+import json
+
 
 
 
@@ -93,10 +95,15 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
             }
 
         analisis = analizar_datos_dict(datos_dict)
-        content["&&estadistica&&"]=analisis
-        print("analisisss" + analisis.toString())    
-      
-        content={"estado": "ok", "datos": datos_dict}
+   
+        print("analisisss", json.dumps(analisis, indent=2, ensure_ascii=False))
+  
+       
+        content = {
+                "estado": "ok",
+                "datos": datos_dict,
+                "&&estadistica&&": analisis
+                    }
         return JSONResponse(content)
         
             
