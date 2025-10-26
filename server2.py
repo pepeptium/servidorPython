@@ -42,6 +42,22 @@ def convertir_valor(valor):
         valor_limpio = valor.strip()
 
         # Traducir meses en español a inglés
+       
+        formatos = [
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%d/%m/%Y %H:%M:%S",
+        "%m/%d/%Y",
+        "%m/%d/%Y %H:%M:%S"
+    ]
+    
+        for formato in formatos:
+                try:
+                    return datetime.strptime(valor, formato)
+                except ValueError:
+                    continue
         MESES_ES = {
             "enero": "January", "febrero": "February", "marzo": "March", "abril": "April",
             "mayo": "May", "junio": "June", "julio": "July", "agosto": "August",
@@ -53,7 +69,6 @@ def convertir_valor(valor):
             if re.search(patron, valor_limpio, flags=re.IGNORECASE):
                 valor_limpio = re.sub(patron, eng, valor_limpio, flags=re.IGNORECASE)
                 break  # solo reemplaza el primero que encuentre
-
         # Intentar parsear directamente sin regex previa
         try:
             fecha = parser.parse(valor_limpio, dayfirst=True, fuzzy=False)
