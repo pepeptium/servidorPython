@@ -124,9 +124,25 @@ def tipo_mas_frecuente(valores: List[Any]) -> Type:
     Devuelve el tipo de dato más frecuente en la lista de valores.
     Ignora los valores None.
     """
-    tipos = [type(v) for v in valores if v is not None]
-    contador = Counter(tipos)
-    tipo_dominante, _ = contador.most_common(1)[0]
+    tipo_contador = Counter()
+
+    for v in valores:
+        if v is None:
+            continue
+        elif isinstance(v, (datetime, date)):
+            tipo_contador[datetime] += 1
+        elif isinstance(v, bool):
+            tipo_contador[bool] += 1
+        elif isinstance(v, int):
+            tipo_contador[int] += 1
+        elif isinstance(v, float):
+            tipo_contador[float] += 1
+        elif isinstance(v, str):
+            tipo_contador[str] += 1
+        else:
+            tipo_contador[type(v)] += 1  # fallback
+
+    tipo_dominante, _ = tipo_contador.most_common(1)[0]
     return tipo_dominante
 def es_nulo(v: Any, tipo_dominante: Type) -> bool:
     if v is None:
