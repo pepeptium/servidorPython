@@ -80,15 +80,6 @@ def convertir_valor(valor):
     return valor
 
 
-
-    
-
-
-
-
-
-
-
 @app.post("/analizar_excel_tipado/")
 async def analizar_excel_tipado(file: UploadFile = File(...)):
     print("estamos en el servidorrr")
@@ -110,12 +101,12 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
             engine = "xlrd" if extension == "xls" else "openpyxl"
             hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
             datos_dict = {
-             nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
+             nombre_hoja: df.to_dict(orient="list")
              for nombre_hoja, df in hojas.items()
             }
             print("hoja importada en servidor")
             print(datos_dict)
-
+          #falta convertir datos
         analisis = analizar_datos_dict(datos_dict)
    
         print("analisisss", json.dumps(analisis, indent=2, ensure_ascii=False))
