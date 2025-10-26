@@ -106,15 +106,17 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
             }
             print("hoja importada en servidor")
             print(datos_dict)
+
           #falta convertir datos
         analisis = analizar_datos_dict(datos_dict)
    
         print("analisisss", json.dumps(analisis, indent=2, ensure_ascii=False))
-  
+        df_convertido = datos_dict.applymap(convertir_valor)
+ 
        
         content = {
                 "estado": "ok",
-                "datos": datos_dict,
+                "datos": df_convertido,
                 "&&estadistica&&": analisis
                     }
         return JSONResponse(content)
