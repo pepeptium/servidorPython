@@ -1,18 +1,17 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import io
+from io import BytesIO
 import pandas as pd
 import datetime
-import numpy as np
 import re
 from dateutil import parser
-import json
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Type
 from collections import Counter
 import math
-from typing import Type
 from datetime import datetime, date
+from dateutil import parser
+
 
 
 
@@ -92,11 +91,14 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
              nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
              for nombre_hoja, df in hojas.items()
             }
+
         analisis = analizar_datos_dict(datos_dict)
+        content["&&estadistica&&"]=analisis
+        print("analisisss" + analisis.toString())    
+      
         content={"estado": "ok", "datos": datos_dict}
         return JSONResponse(content)
-        content["&&estadistica&&"]=analisis
-        print("analisisss" + analisis.toString())
+        
             
       
 
