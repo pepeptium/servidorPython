@@ -101,7 +101,7 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
             engine = "xlrd" if extension == "xls" else "openpyxl"
             hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
             datos_dict = {
-             nombre_hoja: df.to_dict(orient="list")
+             nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
              for nombre_hoja, df in hojas.items()
             }
             print("hoja importada en servidor")
@@ -110,13 +110,13 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
           #falta convertir datos
         analisis = analizar_datos_dict(datos_dict)
    
-        print("analisisss", json.dumps(analisis, indent=2, ensure_ascii=False))
-        df_convertido = datos_dict.applymap(convertir_valor)
+       # print("analisisss", json.dumps(analisis, indent=2, ensure_ascii=False))
+       # df_convertido = datos_dict.applymap(convertir_valor)
  
        
         content = {
                 "estado": "ok",
-                "datos": df_convertido,
+                "datos": datos_dict,
                 "&&estadistica&&": analisis
                     }
         return JSONResponse(content)
