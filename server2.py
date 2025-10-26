@@ -41,25 +41,27 @@ def convertir_valor(valor):
     if isinstance(valor, str):
         valor_limpio = valor.strip()
 
-        # Opcional: traducir meses en español
+        # Traducir meses en español a inglés
         MESES_ES = {
             "enero": "January", "febrero": "February", "marzo": "March", "abril": "April",
             "mayo": "May", "junio": "June", "julio": "July", "agosto": "August",
             "septiembre": "September", "octubre": "October", "noviembre": "November", "diciembre": "December"
         }
-        for esp, eng in MESES_ES.items():
-            if esp in valor_limpio.lower():
-                valor_limpio = re.sub(esp, eng, valor_limpio, flags=re.IGNORECASE)
-                break
-        if re.search(r"\d{1,2}[-/\.]\d{1,2}[-/\.]\d{2,4}", valor_limpio) or re.search(r"\b(?:ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic|\d{4})\b", valor_limpio, re.IGNORECASE):
-    
-            try:
-                fecha = parser.parse(valor_limpio, dayfirst=True, fuzzy=False)
-                return fecha.isoformat()
-            except (ValueError, OverflowError):
-             pass
 
-    return valor  
+        for esp, eng in MESES_ES.items():
+            patron = r"\b" + re.escape(esp) + r"\b"
+            if re.search(patron, valor_limpio, flags=re.IGNORECASE):
+                valor_limpio = re.sub(patron, eng, valor_limpio, flags=re.IGNORECASE)
+                break  # solo reemplaza el primero que encuentre
+
+        # Intentar parsear directamente sin regex previa
+        try:
+            fecha = parser.parse(valor_limpio, dayfirst=True, fuzzy=False)
+            return fecha.isoformat()
+        except (ValueError, OverflowError):
+            pass
+
+    return valor
 
 
 
