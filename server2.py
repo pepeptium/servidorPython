@@ -112,6 +112,8 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
              nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
              for nombre_hoja, df in hojas.items()
             }
+            print("hoja importada en servidor")
+            print(datos_dict)
 
         analisis = analizar_datos_dict(datos_dict)
    

@@ -34,6 +34,15 @@ def es_fecha(valor) -> bool:
 esfecha=es_fecha("01/01/2025")
 v1=server2.convertir_valor("01/01/2025")
 print(type(v1))
-print(v1)
+lista=["02/01/2025","02/01/2025","01/01/2025","04/01/2025"]
+resultado = list(map(server2.convertir_valor, lista))
+
+tipo=server2.tipo_mas_frecuente(resultado)
+print("tipo de la lista")
+print(tipo.__name__)
+print(" isinstance(v, (datetime, date))")
+print( isinstance(v1, (datetime, date)))
+
+print("v1",v1)
 #v=isinstance("01/01/2025", (datetime, date))
 #print(v)
