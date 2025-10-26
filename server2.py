@@ -44,6 +44,7 @@ def convertir_valor(valor):
         # Traducir meses en español a inglés
        
         formatos = [
+        "%Y-%m-%dT%H:%M:%S",
         "%Y-%m-%d %H:%M:%S",
         "%Y-%m-%d",
         "%d/%m/%Y",
@@ -135,6 +136,40 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
         return JSONResponse(content={"estado": "error", "detalle": str(e)})
     
 
+def convertir_a_datetime(valor: str):
+    """
+    Intenta convertir un string (incluyendo ISO 8601) a datetime.
+    Si no es posible, devuelve el string original.
+    """
+    if not isinstance(valor, str):
+        return valor
+
+    # 1️⃣ Intentar formato ISO 8601 (Python 3.7+)
+    try:
+        return datetime.fromisoformat(valor.replace("Z", "+00:00"))
+    except ValueError:
+        pass
+
+    # 2️⃣ Intentar formatos comunes (incluyendo con 'T')
+    formatos = [
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%d/%m/%Y %H:%M:%S",
+        "%m/%d/%Y",
+        "%m/%d/%Y %H:%M:%S"
+    ]
+    
+    for formato in formatos:
+        try:
+            return datetime.strptime(valor, formato)
+        except ValueError:
+            continue
+    
+    # 3️⃣ Si no se pudo convertir, devolver el string original
+    return valor
 
 def tipo_mas_frecuente(valores: List[Any]) -> Type:
     """

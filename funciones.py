@@ -8,34 +8,66 @@ def es_fecha(valor) -> bool:
         return True
 
     if isinstance(valor, str):
-        valor_limpio = valor.strip()
-
-        # Traducir meses en español a inglés (si aplica)
-        MESES_ES = {
-            "enero": "January", "febrero": "February", "marzo": "March", "abril": "April",
-            "mayo": "May", "junio": "June", "julio": "July", "agosto": "August",
-            "septiembre": "September", "octubre": "October", "noviembre": "November", "diciembre": "December"
-        }
-        for esp, eng in MESES_ES.items():
-            patron = r"\b" + re.escape(esp) + r"\b"
-            if re.search(patron, valor_limpio, flags=re.IGNORECASE):
-                valor_limpio = re.sub(patron, eng, valor_limpio, flags=re.IGNORECASE)
-                break
-
-        # Intentar parsear como fecha
         try:
-            parser.parse(valor_limpio, dayfirst=True, fuzzy=False)
+            parser.parse(valor, dayfirst=True, fuzzy=False)
             return True
         except (ValueError, OverflowError):
             return False
 
     return False
 
-esfecha=es_fecha("01/01/2025")
-v1=server2.convertir_valor("01/01/2025")
+from datetime import datetime
+
+from datetime import datetime
+
+def convertir_a_datetime(valor: str):
+    """
+    Intenta convertir un string (incluyendo ISO 8601) a datetime.
+    Si no es posible, devuelve el string original.
+    """
+    if not isinstance(valor, str):
+        return valor
+
+    # 1️⃣ Intentar formato ISO 8601 (Python 3.7+)
+    try:
+        return datetime.fromisoformat(valor.replace("Z", "+00:00"))
+    except ValueError:
+        pass
+
+    # 2️⃣ Intentar formatos comunes (incluyendo con 'T')
+    formatos = [
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%d/%m/%Y %H:%M:%S",
+        "%m/%d/%Y",
+        "%m/%d/%Y %H:%M:%S"
+    ]
+    
+    for formato in formatos:
+        try:
+            return datetime.strptime(valor, formato)
+        except ValueError:
+            continue
+    
+    # 3️⃣ Si no se pudo convertir, devolver el string original
+    return valor
+
+
+
+esfecha=convertir_a_datetime('2025-01-01T00:00:00')
+print("convertir_a_datetime funcion " )
+print(esfecha)
+print("tipo esfecha")
+print(type(esfecha))
+
+v1=server2.convertir_valor('2025-01-01T00:00:00')
 print(type(v1))
 lista=["02/01/2025","02/01/2025","01/01/2025","04/01/2025"]
-resultado = list(map(server2.convertir_valor, lista))
+lista1=['2025-01-01T00:00:00', '2025-02-02T00:00:00', '2025-03-06T00:00:00', '2025-04-07T00:00:00', '2025-05-09T00:00:00']
+resultado = list(map(server2.convertir_valor, lista1))
 
 tipo=server2.tipo_mas_frecuente(resultado)
 print("tipo de la lista")
