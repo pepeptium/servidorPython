@@ -56,7 +56,7 @@ def convertir_valor(valor):
     
         for formato in formatos:
                 try:
-                    return datetime.strptime(valor, formato)
+                    return datetime.strptime(valor, formato).isoformat()
                 except ValueError:
                     continue
         MESES_ES = {
@@ -79,116 +79,6 @@ def convertir_valor(valor):
 
     return valor
 
-
-@app.post("/analizar_excel_tipado/")
-async def analizar_excel_tipado(file: UploadFile = File(...)):
-    print("estamos en el servidorrr")
-    try:
-        contents = await file.read()
-        extension = file.filename.split(".")[-1].lower()
-
-        if extension not in ["xls", "xlsx", "csv"]:
-            print("el fichero no excel ni csv")
-            return JSONResponse(content={"estado": "error", "detalle": "Formato no soportado"})
-        if extension == "csv":
-         print("la extension esss csv")
-         df = pd.read_csv(BytesIO(contents))
-         df = df.applymap(convertir_valor)
-
-         datos_dict = {"csv": df.to_dict(orient="list")}
-        else:
-            print("la extension essss xlrd o xlsx")
-            engine = "xlrd" if extension == "xls" else "openpyxl"
-            hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
-            datos_dict = {
-             nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
-             for nombre_hoja, df in hojas.items()
-            }
-            print("hoja importada en servidor")
-            print(datos_dict)
-
-          #falta convertir datos
-        analisis = analizar_datos_dict(datos_dict)
-   
-       # print("analisisss", json.dumps(analisis, indent=2, ensure_ascii=False))
-       # df_convertido = datos_dict.applymap(convertir_valor)
- 
-       
-        content = {
-                "estado": "ok",
-                "datos": datos_dict,
-                "&&estadistica&&": analisis
-                    }
-        return JSONResponse(content)
-        
-            
-      
-
-    except Exception as e:
-        print("detallerrr error "+str(e))
-        return JSONResponse(content={"estado": "error", "detalle": str(e)})
-    
-
-def convertir_a_datetime(valor: str):
-    """
-    Intenta convertir un string (incluyendo ISO 8601) a datetime.
-    Si no es posible, devuelve el string original.
-    """
-    if not isinstance(valor, str):
-        return valor
-
-    # 1️⃣ Intentar formato ISO 8601 (Python 3.7+)
-    try:
-        return datetime.fromisoformat(valor.replace("Z", "+00:00"))
-    except ValueError:
-        pass
-
-    # 2️⃣ Intentar formatos comunes (incluyendo con 'T')
-    formatos = [
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%d %H:%M:%S",
-        "%Y-%m-%d",
-        "%d/%m/%Y",
-        "%d-%m-%Y",
-        "%d/%m/%Y %H:%M:%S",
-        "%m/%d/%Y",
-        "%m/%d/%Y %H:%M:%S"
-    ]
-    
-    for formato in formatos:
-        try:
-            return datetime.strptime(valor, formato)
-        except ValueError:
-            continue
-    
-    # 3️⃣ Si no se pudo convertir, devolver el string original
-    return valor
-
-def tipo_mas_frecuente(valores: List[Any]) -> Type:
-    """
-    Devuelve el tipo de dato más frecuente en la lista de valores.
-    Ignora los valores None.
-    """
-    tipo_contador = Counter()
-
-    for v in valores:
-        if v is None:
-            continue
-        elif isinstance(v, (datetime, date)):
-            tipo_contador[datetime] += 1
-        elif isinstance(v, bool):
-            tipo_contador[bool] += 1
-        elif isinstance(v, int):
-            tipo_contador[int] += 1
-        elif isinstance(v, float):
-            tipo_contador[float] += 1
-        elif isinstance(v, str):
-            tipo_contador[str] += 1
-        else:
-            tipo_contador[type(v)] += 1  # fallback
-
-    tipo_dominante, _ = tipo_contador.most_common(1)[0]
-    return tipo_dominante
 def es_nulo(v: Any, tipo_dominante: Type) -> bool:
     if v is None:
         return True
@@ -199,9 +89,13 @@ def es_nulo(v: Any, tipo_dominante: Type) -> bool:
     if not isinstance(v, tipo_dominante):
         return True
     return False
-
+#funcion que realiza python
 def analizar_datos_dict(datos_dict: Dict[str, Dict[str, List[Any]]]) ->Dict[str, Dict[str, Dict[str, Any]]]:
     resultado = {}
+    if datos_dict is None:
+     print("⚠️ El diccionario de datos está vacío o no se pudo generar.")
+     return {"nulo"}
+
 
     for nombre_hoja, columnas in datos_dict.items():
         hoja_resultado = {}
@@ -279,30 +173,117 @@ def analizar_datos_dict(datos_dict: Dict[str, Dict[str, List[Any]]]) ->Dict[str,
     
     return resultado
 
+    
+def convierteFicheroPd(file: UploadFile = File(...)):
+    print("estamos en el servidorrr")
+    try:
+        contents =  file.read()
+        extension = file.filename.split(".")[-1].lower()
 
+        if extension not in ["xls", "xlsx", "csv"]:
+            print("el fichero no excel ni csv")
+            return JSONResponse(content={"estado": "error", "detalle": "Formato no soportado"})
+        if extension == "csv":
+         print("la extension esss csv")
+         df = pd.read_csv(BytesIO(contents))
+        # df = df.applymap(convertir_valor)
 
+         datos_dict = {"csv": df.to_dict(orient="list")}
+        else:
+            print("la extension essss xlrd o xlsx")
+            engine = "xlrd" if extension == "xls" else "openpyxl"
+            hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
+            return hojas
+    except Exception as e:
+        print("detallerrr error "+str(e))
+        return JSONResponse(content={"estado": "error", "detalle": str(e)})
+    
+    return
+def convierteValoresPd (hojas):
+    hojas_convertidas = {
+        nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
+        for nombre_hoja, df in hojas.items()}
+    return hojas_convertidas
 
+def tipo_mas_frecuente(valores: List[Any]) -> Type:
+    """
+    Devuelve el tipo de dato más frecuente en la lista de valores.
+    Ignora los valores None.
+    """
+    tipo_contador = Counter()
 
+    for v in valores:
+        if v is None:
+            continue
+        elif isinstance(v, (datetime, date)):
+            tipo_contador[datetime] += 1
+        elif isinstance(v, bool):
+            tipo_contador[bool] += 1
+        elif isinstance(v, int):
+            tipo_contador[int] += 1
+        elif isinstance(v, float):
+            tipo_contador[float] += 1
+        elif isinstance(v, str):
+            tipo_contador[str] += 1
+        else:
+            tipo_contador[type(v)] += 1  # fallback
 
-@app.get("/saludo/")
-def saludar():
-    return {"mensaje": "Hola mundo"}
-
-@app.post("/analizar_excel/")
-async def analizar_excel(file: UploadFile = File(...)):
+    tipo_dominante, _ = tipo_contador.most_common(1)[0]
+    return tipo_dominante
+def conviertePdDict(hojas):
+    datos_dict = {
+             nombre_hoja: df.to_dict(orient="list")
+             for nombre_hoja, df in hojas.items()
+            }
+   # print("hoja importada en servidor datos dict")
+   # print(datos_dict)
+    return datos_dict
+@app.post("/analizar_excel_tipado/")
+async def analizar_excel_tipado2(file: UploadFile = File(...)):
+    print("estamos en el servidorrr")
     try:
         contents = await file.read()
-        df = pd.read_excel(BytesIO(contents), engine="openpyxl")
+        extension = file.filename.split(".")[-1].lower()
 
-        # Ejemplo de análisis: contar filas y columnas
-        resumen = {
-            "n_filas": df.shape[0],
-            "n_columnas": df.shape[1],
-            "columnas": df.columns.tolist()
-        }
+        if extension not in ["xls", "xlsx", "csv"]:
+            print("el fichero no excel ni csv")
+            return JSONResponse(content={"estado": "error", "detalle": "Formato no soportado"})
+        if extension == "csv":
+         print("la extension esss csv")
+         df = pd.read_csv(BytesIO(contents))
+         df = df.applymap(convertir_valor)
 
-        return {"estado": "ok", "resumen": resumen}
-    
+         datos_dict = {"csv": df.to_dict(orient="list")}
+        else:
+            print("la extension essss xlrd o xlsx")
+            engine = "xlrd" if extension == "xls" else "openpyxl"
+            hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
+
+            
+            hojaDict=conviertePdDict(hojas)
+            analisis=analizar_datos_dict(hojaDict)
+            pdValoresConvertidosDart=convierteValoresPd(hojas)
+            content = {
+                    "estado": "ok",
+                    "datos": pdValoresConvertidosDart,
+                    "&&estadistica&&": analisis
+                        }
+            print("aqui va el analisis")
+            print(analisis)
+
+        return JSONResponse(content)
+
     except Exception as e:
-        return {"estado": "error", "detalle": str(e)}
+        print("detallerrr error "+str(e))
+        return JSONResponse(content={"estado": "error", "detalle": str(e)})
+    
 
+
+
+
+
+
+
+
+
+#------------------------------------------

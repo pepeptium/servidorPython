@@ -123,7 +123,7 @@ def convertir_valor(valor):
             pass
 
     return valor
-
+#funcion prueba
 def cargar_excel_con_explorador():
     """
     Abre el explorador de archivos, carga el archivo Excel y devuelve un objeto tipo archivo.
@@ -139,7 +139,7 @@ def cargar_excel_con_explorador():
         return None
 
     return ArchivoSimulado(ruta_archivo)
-
+#funcion prueba
 class ArchivoSimulado:
     def __init__(self, ruta):
         self.filename = ruta.split("/")[-1]
@@ -148,6 +148,8 @@ class ArchivoSimulado:
 
     def read(self):
         return self._contenido
+
+
 def es_nulo(v: Any, tipo_dominante: Type) -> bool:
     if v is None:
         return True
