@@ -210,6 +210,7 @@ async def analizar_excel_tipado(file: UploadFile = File(...)):
 
 
 def analizar_datos_df_dict(hojas: Dict[str, pd.DataFrame]) -> Dict[str, Dict[str, Dict[str, Any]]]:
+
     resultado = {}
 
     for nombre_hoja, df in hojas.items():
@@ -221,6 +222,183 @@ def analizar_datos_df_dict(hojas: Dict[str, pd.DataFrame]) -> Dict[str, Dict[str
             tipoColumna = tipo_mas_frecuente(valores)
             valores_validos = [v for v in valores if not es_nulo(v, tipoColumna)]
             nulos = len(valores) - len(valores_validos)
+
+            analisis = {
+                "tipo_dominante": tipoColumna.__name__,
+                "nulos": nulos,
+                "unicos": len(set(valores_validos))
+            }
+
+            if tipoColumna in [int, float]:
+                n = len(valores_validos)
+                media = sum(valores_validos) / n if n > 0 else None
+                varianza = sum((x - media) ** 2 for x in valores_validos) / n if n > 0 else None
+                std = math.sqrt(varianza) if varianza is not None else None
+
+                analisis.update({
+                    "count": n,
+                    "mean": media,
+                    "std": std,
+                    "min": min(valores_validos) if valores_validos else None,
+                    "max": max(valores_validos) if valores_validos else None,
+                })
+
+            elif tipoColumna in [datetime, date]:
+                fechas = [v for v in valores_validos if isinstance(v, (datetime, date))]
+                fechas_ordenadas = sorted(fechas)
+                rango = (fechas_ordenadas[-1] - fechas_ordenadas[0]).days if len(fechas_ordenadas) >= 2 else None
+
+                por_dia = Counter(f.day for f in fechas)
+                por_mes = Counter(f.month for f in fechas)
+                por_anio = Counter(f.year for f in fechas)
+                por_semana = Counter(f.strftime("%A") for f in fechas)
+
+                analisis.update({
+                    "count": len(fechas),
+                    "min_date": fechas_ordenadas[0].isoformat() if fechas_ordenadas else None,
+                    "max_date": fechas_ordenadas[-1].isoformat() if fechas_ordenadas else None,
+                    "range_days": rango,
+                    "por_dia_mes": dict(por_dia),
+                    "por_mes": dict(por_mes),
+                    "por_anio": dict(por_anio),
+                    "por_dia_semana": dict(por_semana)
+                })
+
+            elif tipoColumna is bool:
+                contador = Counter(valores_validos)
+                analisis.update({
+                    "count": len(valores_validos),
+                    "true": contador.get(True, 0),
+                    "false": contador.get(False, 0),
+                })
+
+            elif tipoColumna is str:
+                contador = Counter(valores_validos)
+                mas_comun = contador.most_common(1)[0] if contador else (None, 0)
+
+                analisis.update({
+                    "count": len(valores_validos),
+                    "unique": len(set(valores_validos)),
+                    "most_common": mas_comun[0],
+                    "freq": mas_comun[1],
+                })
+
+            hoja_resultado[nombre_columna] = analisis
+
+        resultado[nombre_hoja] = hoja_resultado
+
+    return resultado
+
+from typing import Dict, List, Any
+from collections import Counter
+from datetime import datetime, date
+import math
+def tipo_mas_frecuente(valores: List[Any]) -> Type:
+    """
+    Devuelve el tipo de dato más frecuente en la lista de valores.
+    Ignora los valores None.
+    """
+    tipo_contador = Counter()
+
+    for v in valores:
+        if v is None:
+            continue
+        elif isinstance(v, (datetime, date)):
+            tipo_contador[datetime] += 1
+        elif isinstance(v, bool):
+            tipo_contador[bool] += 1
+        elif isinstance(v, int):
+            tipo_contador[int] += 1
+        elif isinstance(v, float):
+            tipo_contador[float] += 1
+        elif isinstance(v, str):
+            if (esFechaString(v)):
+             tipo_contador[datetime] += 1
+            else:
+             tipo_contador[str] += 1
+        else:
+            tipo_contador[type(v)] += 1  # fallback
+
+    tipo_dominante, _ = tipo_contador.most_common(1)[0]
+    return tipo_dominante
+def convertir_valor(valor):
+    if pd.isna(valor):
+        return ""
+    if isinstance(valor, bool):
+        return valor
+    if isinstance(valor, (int, float)):
+        return int(valor) if valor == int(valor) else float(valor)
+    if isinstance(valor, (datetime, date)):
+        return valor.isoformat()
+
+    if isinstance(valor, str):
+        valor_limpio = valor.strip()
+
+        # Traducir meses en español a inglés
+       
+        formatos = [
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%d/%m/%Y %H:%M:%S",
+        "%m/%d/%Y",
+        "%m/%d/%Y %H:%M:%S"
+    ]
+    
+        for formato in formatos:
+                try:
+                    return datetime.strptime(valor, formato).isoformat()
+                except ValueError:
+                    continue
+        MESES_ES = {
+            "enero": "January", "febrero": "February", "marzo": "March", "abril": "April",
+            "mayo": "May", "junio": "June", "julio": "July", "agosto": "August",
+            "septiembre": "September", "octubre": "October", "noviembre": "November", "diciembre": "December"
+        }
+
+        for esp, eng in MESES_ES.items():
+            patron = r"\b" + re.escape(esp) + r"\b"
+            if re.search(patron, valor_limpio, flags=re.IGNORECASE):
+                valor_limpio = re.sub(patron, eng, valor_limpio, flags=re.IGNORECASE)
+                break  # solo reemplaza el primero que encuentre
+        # Intentar parsear directamente sin regex previa
+        try:
+            fecha = parser.parse(valor_limpio, dayfirst=True, fuzzy=False)
+            return fecha.isoformat()
+        except (ValueError, OverflowError):
+            pass
+
+    return valor
+def es_nulo(v: Any, tipo_dominante: Type) -> bool:
+    if v is None:
+        return True
+    if isinstance(v, float) and math.isnan(v):
+        return True
+    if isinstance(v, str) and v.strip().lower() in ["", "null", "nan"]:
+        return True
+    if not isinstance(v, tipo_dominante):
+        return True
+    return False
+
+def analizar_hojas(hojas: Dict[str, Any]) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    resultado = {}
+
+    if hojas is None:
+        print("⚠️ El diccionario de hojas está vacío o no se pudo generar.")
+        return {"nulo": {}}
+
+    for nombre_hoja, df in hojas.items():
+        hoja_resultado = {}
+
+        for nombre_columna in df.columns:
+            valores_crudos = df[nombre_columna].tolist()
+            valores_convertidos = [convertir_valor(v) for v in valores_crudos]
+
+            tipoColumna = tipo_mas_frecuente(valores_convertidos)
+            valores_validos = [v for v in valores_convertidos if not es_nulo(v, tipoColumna)]
+            nulos = len(valores_convertidos) - len(valores_validos)
 
             analisis = {
                 "tipo_dominante": tipoColumna.__name__,

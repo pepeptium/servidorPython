@@ -201,9 +201,51 @@ def convierteFicheroPd(file: UploadFile = File(...)):
     return
 def convierteValoresPd (hojas):
     hojas_convertidas = {
-        nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
+        nombre_hoja: df.apply(lambda col: col.map(convertir_valor)).to_dict(orient="list")
         for nombre_hoja, df in hojas.items()}
     return hojas_convertidas
+def esFechaString(valor):
+    if not isinstance(valor, str):
+        return False
+
+    valor_limpio = valor.strip()
+
+    formatos = [
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%d/%m/%Y %H:%M:%S",
+        "%m/%d/%Y",
+        "%m/%d/%Y %H:%M:%S"
+    ]
+
+    MESES_ES = {
+        "enero": "January", "febrero": "February", "marzo": "March", "abril": "April",
+        "mayo": "May", "junio": "June", "julio": "July", "agosto": "August",
+        "septiembre": "September", "octubre": "October", "noviembre": "November", "diciembre": "December"
+    }
+
+    # Intentar con formatos explícitos
+    for formato in formatos:
+        try:
+            datetime.strptime(valor_limpio, formato)
+            return True
+        except ValueError:
+            continue
+
+    # Traducir meses en español
+    for esp, eng in MESES_ES.items():
+        patron = r"\b" + re.escape(esp) + r"\b"
+        valor_limpio = re.sub(patron, eng, valor_limpio, flags=re.IGNORECASE)
+
+    # Intentar parseo genérico
+    try:
+        parser.parse(valor_limpio, dayfirst=True, fuzzy=False)
+        return True
+    except (ValueError, OverflowError):
+        return False
 
 def tipo_mas_frecuente(valores: List[Any]) -> Type:
     """
@@ -224,7 +266,10 @@ def tipo_mas_frecuente(valores: List[Any]) -> Type:
         elif isinstance(v, float):
             tipo_contador[float] += 1
         elif isinstance(v, str):
-            tipo_contador[str] += 1
+            if (esFechaString(v)):
+             tipo_contador[datetime] += 1
+            else:
+             tipo_contador[str] += 1
         else:
             tipo_contador[type(v)] += 1  # fallback
 
