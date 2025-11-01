@@ -320,6 +320,7 @@ def conviertePdDict(hojas):
     print("hoja importada en servidor datos dict")
     print(datos_dict)
     return datos_dict
+
 def convierteValoresPd (hojas):
     hojas_convertidas = {
         nombre_hoja: df.applymap(convertir_valor).to_dict(orient="list")
@@ -368,8 +369,11 @@ async def cargarExcel():
             df = pd.read_excel(BytesIO(contenido), engine=engine)
         print(df.head()) 
     return df
-def exportar_dart():
-                archivo= cargar_excel_con_explorador()
+
+
+
+def exportar_dart(archivo):
+                
                 datosimportadosPd= convierteFicheroPd(archivo)
                 hojaDict=conviertePdDict(datosimportadosPd)
                 analisis=analizar_datos_dict(hojaDict)
@@ -383,9 +387,9 @@ def exportar_dart():
                 print("aqui va el json")
                 print(json.dumps(content, indent=4))   
                     
+archivo= cargar_excel_con_explorador()
 
-
-exportar_dart()
+exportar_dart(archivo)
 #esfecha=convertir_a_datetime('2025-01-01T00:00:00')
 #print("convertir_a_datetime funcion " )
 #print(esfecha)
