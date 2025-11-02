@@ -465,3 +465,19 @@ def analizar_hojas(hojas: Dict[str, Any]) -> Dict[str, Dict[str, Dict[str, Any]]
         resultado[nombre_hoja] = hoja_resultado
 
     return resultado
+
+partes_recibidas = {}
+
+@app.post("/upload_chunk")
+async def recibir_chunk(parte: int = Form(...), chunk: UploadFile = Form(...)):
+    contenido = await chunk.read()
+    partes_recibidas[parte] = contenido
+    print(f"Parte {parte} recibida: {len(contenido)} bytes")
+    return {"estado": "ok", "parte": parte}
+
+def reconstruir_excel():
+    ordenadas = [partes_recibidas[i] for i in sorted(partes_recibidas)]
+    todo = b''.join(ordenadas)
+    with open("archivo_reconstruido.xlsx", "wb") as f:
+        f.write(todo)
+
