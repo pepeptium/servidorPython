@@ -321,7 +321,46 @@ async def analizar_excel_tipado2(file: UploadFile = File(...)):
     except Exception as e:
         print("detallerrr error "+str(e))
         return JSONResponse(content={"estado": "error", "detalle": str(e)})
-    
+   
+@app.post("/datosbrutos/")
+async def datosbrutos(file: UploadFile = File(...)):
+    print("estamos en el servidorrr")
+    try:
+        contents = await file.read()
+        extension = file.filename.split(".")[-1].lower()
+
+        if extension not in ["xls", "xlsx", "csv"]:
+            print("el fichero no excel ni csv")
+            return JSONResponse(content={"estado": "error", "detalle": "Formato no soportado"})
+        if extension == "csv":
+         print("la extension esss csv")
+         df = pd.read_csv(BytesIO(contents))
+        # df = df.applymap(convertir_valor)
+
+         datos_dict = {"csv": df.to_dict(orient="list")}
+        else:
+            print("la extension essss xlrd o xlsx")
+            engine = "xlrd" if extension == "xls" else "openpyxl"
+            hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
+
+            
+            hojaDict=conviertePdDict(hojas)
+            #analisis=analizar_datos_dict(hojaDict)
+           # pdValoresConvertidosDart=convierteValoresPd(hojas)
+            content = {
+                    "estado": "ok",
+                    "datos": hojaDict,
+                 #   "&&estadistica&&": analisis
+                        }
+         #   print("aqui va el analisis")
+         #   print(analisis)
+
+        return JSONResponse(content)
+
+    except Exception as e:
+        print("detallerrr error "+str(e))
+        return JSONResponse(content={"estado": "error", "detalle": str(e)})
+ 
 
 
 
