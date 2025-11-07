@@ -344,12 +344,12 @@ async def datosbrutos(file: UploadFile = File(...)):
             hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
 
             
-            hojaDict=conviertePdDict(hojas)
+            pdValoresConvertidosDart=convierteValoresPd(hojas)
             #analisis=analizar_datos_dict(hojaDict)
            # pdValoresConvertidosDart=convierteValoresPd(hojas)
             content = {
                     "estado": "ok",
-                    "datos": hojaDict,
+                    "datos": pdValoresConvertidosDart,
                  #   "&&estadistica&&": analisis
                         }
          #   print("aqui va el analisis")
