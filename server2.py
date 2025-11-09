@@ -377,12 +377,13 @@ async def upload_chunk(
     with open(chunk_path, "wb") as f:
         content = await file.read()
         f.write(content)
-
+        print({"status": "chunk received", "chunk_index": chunk_index})
     return JSONResponse(content={"status": "chunk received", "chunk_index": chunk_index})
 
 
 @app.post("/assemble-file/")
 def assemble_file(file_id: str, total_chunks: int):
+    print("comienza assemble fileeee")
     output_path = os.path.join(UPLOAD_DIR, f"{file_id}_assembled")
     with open(output_path, "wb") as outfile:
         for i in range(total_chunks):
@@ -392,6 +393,7 @@ def assemble_file(file_id: str, total_chunks: int):
             os.remove(chunk_path)  # opcional: limpiar chunks
 
      # 🔍 Procesar el archivo directamente
+    print("hemos hecho el aseembleee")
     try:
         with open(output_path, "rb") as f:
             contents = f.read()
