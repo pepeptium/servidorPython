@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from io import BytesIO
@@ -11,6 +11,7 @@ import math
 from datetime import datetime, date
 from dateutil import parser
 import json
+import os
 
 
 
@@ -360,7 +361,59 @@ async def datosbrutos(file: UploadFile = File(...)):
     except Exception as e:
         print("detallerrr error "+str(e))
         return JSONResponse(content={"estado": "error", "detalle": str(e)})
- 
+ # pruebo chunk
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@app.post("/upload-chunk/")
+async def upload_chunk(
+    file: UploadFile,
+    chunk_index: int = Form(...),
+    total_chunks: int = Form(...),
+    file_id: str = Form(...)
+):
+    chunk_path = os.path.join(UPLOAD_DIR, f"{file_id}_chunk_{chunk_index}")
+    with open(chunk_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
+
+    return JSONResponse(content={"status": "chunk received", "chunk_index": chunk_index})
+
+
+@app.post("/assemble-file/")
+def assemble_file(file_id: str, total_chunks: int):
+    output_path = os.path.join(UPLOAD_DIR, f"{file_id}_assembled")
+    with open(output_path, "wb") as outfile:
+        for i in range(total_chunks):
+            chunk_path = os.path.join(UPLOAD_DIR, f"{file_id}_chunk_{i}")
+            with open(chunk_path, "rb") as infile:
+                outfile.write(infile.read())
+            os.remove(chunk_path)  # opcional: limpiar chunks
+
+     # 🔍 Procesar el archivo directamente
+    try:
+        with open(output_path, "rb") as f:
+            contents = f.read()
+        extension = file_id.split(".")[-1].lower()
+
+        if extension not in ["xls", "xlsx", "csv"]:
+            return JSONResponse(content={"estado": "error", "detalle": "Formato no soportado"})
+
+        if extension == "csv":
+            df = pd.read_csv(BytesIO(contents))
+            datos_dict = {"csv": df.to_dict(orient="list")}
+            return JSONResponse(content={"estado": "ok", "datos": datos_dict})
+
+        else:
+            engine = "xlrd" if extension == "xls" else "openpyxl"
+            hojas = pd.read_excel(BytesIO(contents), sheet_name=None, engine=engine)
+            pdValoresConvertidosDart = convierteValoresPd(hojas)
+            return JSONResponse(content={"estado": "ok", "datos": pdValoresConvertidosDart})
+
+    except Exception as e:
+        return JSONResponse(content={"estado": "error", "detalle": str(e)})
+
 
 
 
